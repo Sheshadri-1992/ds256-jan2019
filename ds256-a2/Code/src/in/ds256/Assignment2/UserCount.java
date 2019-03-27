@@ -18,6 +18,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.Durations;
 
+/** A2 **/
 public class UserCount {
 
 	public static void main(String[] args) throws Exception {
