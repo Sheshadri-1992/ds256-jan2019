@@ -15,6 +15,8 @@ import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.Durations;
 
@@ -52,9 +54,10 @@ public class StreamingWordCount {
 		JavaDStream<String> lines = messages.map(ConsumerRecord::value);
 		JavaDStream<String> words = lines.flatMap(x -> Arrays.asList(SPACE.split(x)).iterator());
 		JavaPairDStream<String, Integer> wordCounts = words.mapToPair(s -> new Tuple2<>(s, 1))
-				.reduceByKey((i1, i2) -> i1 + i2);
-		wordCounts.print();
+				.reduceByKey((i1, i2) -> i1 + i2);		
 
+		wordCounts.print();
+		
 		// Start the computation
 		jssc.start();
 		jssc.awaitTermination();
