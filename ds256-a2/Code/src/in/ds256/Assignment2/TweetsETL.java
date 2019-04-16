@@ -42,10 +42,10 @@ public class TweetsETL {
 		System.out.println("The output file is " + output);
 
 		// Create context with a 10 seconds batch interval
-		SparkConf sparkConf = new SparkConf().setMaster("local").setAppName("TweetETL");
-
-//		SparkConf sparkConf = new SparkConf().setAppName("TweetETL");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+//		SparkConf sparkConf = new SparkConf().setMaster("local").setAppName("TweetETL");
+		SparkConf sparkConf = new SparkConf().setAppName("TweetETL");
+		
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(300));
 
 		Map<String, Object> kafkaParams = new HashMap<>();
 		kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker);
@@ -103,6 +103,7 @@ public class TweetsETL {
 			public String removeWord(String string) 
 		    { 
 		  
+				/** Iteratre over all the stopwords **/
 				for(int i=0;i<stopWords.length;i++) {
 				
 					if (string.contains(stopWords[i])) { 
@@ -144,7 +145,19 @@ public class TweetsETL {
 					String userId = myParser.getUser();
 					Integer followersCount = myParser.getFollowersCount();
 					Integer friendsCount = myParser.getFriendsCount();
-					String tweet = myParser.getTweet().replace(",", "").toLowerCase(); /* Lowercase */
+					String tweet = myParser.getTweet().replaceAll(",", "").toLowerCase(); /**  Lowercase **/
+					
+					
+					/** Remove stop words **/
+					if(tweet!=null)
+						tweet=removeWord(tweet);
+					
+					/** Remove punctuation **/
+					tweet = tweet.replaceAll("'", ""); 
+					
+					/** Remove new line characters **/
+					tweet = tweet.replaceAll("\n","");
+					
 					ArrayList<String> hashTagArray = myParser.getHashTagArray();
 
 					if (epoch_time == null || epoch_time.isEmpty() || tweetId == null || tweetId.isEmpty()
@@ -152,7 +165,7 @@ public class TweetsETL {
 						continue;
 
 					StringBuilder hashTags = new StringBuilder();
-
+					
 					if (hashTagArray.size() > 0) {
 						int i = 0;
 						for (i = 0; i < hashTagArray.size() - 1; i++) {
@@ -173,48 +186,6 @@ public class TweetsETL {
 			}
 		});
 
-//		JavaDStream<String> csvFormat = tweets.map(new Function<String, String>() {
-//
-//			@Override
-//			public String call(String arg0) {
-//
-//				String csv = "";
-//				
-//				if(arg0==null || arg0.isEmpty())
-//					return null;
-//				
-//				Parser myParser = new Parser(arg0);
-//				if(!myParser.isJSONValid(arg0))
-//					return null;
-//				
-//				String epoch_time = myParser.getTimeStamp();
-//				String time_zone = myParser.getTimeZone();
-//				String lang = myParser.getLanguage();
-//				String tweetId = myParser.getTweetId();
-//				String userId = myParser.getUser();
-//				Integer followersCount = myParser.getFollowersCount();
-//				Integer friendsCount = myParser.getFriendsCount();
-//				String tweet = myParser.getTweet().replace(",", "").toLowerCase(); /* Lowercase*/
-//				ArrayList<String> hashTagArray = myParser.getHashTagArray();
-//
-//				StringBuilder hashTags = new StringBuilder();
-//
-//				if (hashTagArray.size() > 0) {
-//					int i = 0;
-//					for (i = 0; i < hashTagArray.size() - 1; i++) {
-//						hashTags.append(hashTagArray.get(i) + ";");
-//					}
-//
-//					hashTags.append(hashTagArray.get(i));
-//				}
-//
-//				csv = epoch_time + "," + time_zone + "," + lang + "," + tweetId + "," + userId + "," + followersCount
-//						+ "," + friendsCount + "," + tweet + "," + hashTags;
-//				System.out.println("The csv is " + csv);
-//
-//				return csv;
-//			}
-//		});
 		csvFormat.print();
 		csvFormat.dstream().saveAsTextFiles(output, "");
 

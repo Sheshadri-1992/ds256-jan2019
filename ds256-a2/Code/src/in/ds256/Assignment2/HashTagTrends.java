@@ -45,8 +45,9 @@ public class HashTagTrends {
 		String output = args[2];
 
 		// Create context with a 10 seconds batch interval
-		SparkConf sparkConf = new SparkConf().setAppName("HashTagTrends");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+		SparkConf sparkConf = new SparkConf().setMaster("local").setAppName("HashTagTrends");
+//		SparkConf sparkConf = new SparkConf().setAppName("HashTagTrends");
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(30));
 		
 		Map<String, Object> kafkaParams = new HashMap<>();
 		kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker);
@@ -111,7 +112,9 @@ public class HashTagTrends {
 				// TODO Auto-generated method stub
 				return arg0+arg1;
 			}
-		}, new Duration(5000)); /** This 5000 milli seconds is they key here **/
+		}, new Duration(30000), new Duration(90000)); /** This 5000 milli seconds is they key here **/
+		
+		
 		
 		JavaPairDStream<Integer, String> topHashTags = hashCounts1.mapPartitionsToPair(new PairFlatMapFunction<Iterator<Tuple2<String,Integer>>, Integer, String>() {
 
@@ -142,6 +145,8 @@ public class HashTagTrends {
 		System.out.println("The top 5 hashtags are "+"");
 		
 		topHashTags.print(5);
+		
+		topHashTags.dstream().saveAsTextFiles(output+"q2a", "");
 				
 		// Start the computation
 		jssc.start();

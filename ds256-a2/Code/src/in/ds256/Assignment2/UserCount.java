@@ -33,7 +33,6 @@ import scala.Tuple2;
 public class UserCount {
 
 	/** This is to maintain trailing zeroes **/
-	public static int[] bitVector = new int[64];
 	private static final double PHI = 0.77351D;
 
 	public static void main(String[] args) throws Exception {
@@ -48,18 +47,15 @@ public class UserCount {
 		String topic = args[1];
 		String output = args[2];
 
-		/** Initialize bit vector to 0 **/
-		for (int i = 0; i < 64; i++)
-			bitVector[i] = 0;
-
 		// Create context with a 10 seconds batch interval
+//		SparkConf sparkConf = new SparkConf().setMaster("local").setAppName("UserCount");
 		SparkConf sparkConf = new SparkConf().setAppName("UserCount");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(60));
 
 		/**
 		 * https://databricks.gitbooks.io/databricks-spark-reference-applications/content/logs_analyzer/chapter1/total.html
 		 */
-		jssc.checkpoint("/user/sheshadrik/checkpoint/");
+//		jssc.checkpoint("/user/sheshadrik/checkpoint/");
 
 		Map<String, Object> kafkaParams = new HashMap<>();
 		kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker);
@@ -72,10 +68,6 @@ public class UserCount {
 				LocationStrategies.PreferConsistent(),
 				ConsumerStrategies.Subscribe(Collections.singleton(topic), kafkaParams));
 
-		/**
-		 * Code goes here....
-		 */
-
 		JavaDStream<String> csvFormat = messages.map(ConsumerRecord::value);
 		csvFormat = csvFormat.filter(new Function<String, Boolean>() {
 
@@ -86,7 +78,6 @@ public class UserCount {
 					return false;
 				} else {
 					char firstChar = arg0.charAt(0);
-					System.out.println("The arg0 is ");
 					return Character.isDigit(firstChar);
 				}
 
@@ -103,7 +94,16 @@ public class UserCount {
 
 						while (arg0.hasNext()) {
 							String line = arg0.next();
-							String userId = line.split(",")[5]; /* Index 5 is the position for userId **/
+
+							String userId = null;
+
+							try {
+								userId = line.split(",")[4]; /* Index 5 is the position for userId **/
+							} catch (Exception e) {
+								System.out.println("User Id wasn't present, mishandlded csv");
+								continue;
+								
+							}
 
 							myIter.add(new Tuple2<Long, String>(1L, userId));
 						}
@@ -116,105 +116,109 @@ public class UserCount {
 		JavaPairDStream<Long, Long> hashCodeRDD = userPairRDD
 				.mapToPair(new PairFunction<Tuple2<Long, String>, Long, Long>() {
 
+					/**
+					 * 
+					 * @param hashCode
+					 * @return
+					 */
 					public int returnBitPosition(int hashCode) {
-						int pos = -1;
+						int pos = 0;
 
-						String binString = Integer.toBinaryString(hashCode);
-
-						for (int i = binString.length() - 1; i >= 0; i--) {
-							if (binString.charAt(i) != '0') {
-								break; // because it breaks the trailing set of zeroes
+						for (int i = 0; i < 32; i++) {
+							if ((hashCode % 2) == 0) {
+								hashCode = hashCode / 2;
+								pos++;
+							} else {
+								break;
 							}
-							pos = i;
 						}
+						if (pos == 32 || pos == 0)
+							pos = 0;
 
-						if (pos == -1)
-							return pos;
+						System.out.println("The position is " + pos);
 
-						pos = binString.length() - 1 - pos;
 						return pos;
+
 					}
 
 					@Override
 					public Tuple2<Long, Long> call(Tuple2<Long, String> arg0) throws Exception {
 
-						int[] localBitVector = new int[32];
 						Tuple2<Long, Long> myIter = null;
 
 						String line = arg0._2();
-						int hashCode = line.hashCode();
+						int hashCode = (line.hashCode()) % 100000;
 						int pos = returnBitPosition(hashCode);
 
-						if (pos != -1)
-							localBitVector[pos] = 1;
-						
 						Long newState = 0L;
 
-						for (int i = 0; i < 32; i++) {
-							int num = 0;
-							if (localBitVector[i] == 1) {
-								num = 1 >> i;
-							}
-							newState = newState + (long) num;
-						}
-						
-						myIter = new Tuple2<Long, Long>(1L, newState); /** Most important step **/
-						
+						newState = newState + (long) Math.pow(2, pos); /** This is imp **/
+
+						myIter = new Tuple2<Long, Long>(1L, (long) pos); /** Most important step **/
+
 						return myIter;
 					}
 				});
 
-		JavaPairDStream<Long, Long> reduceHashCode = hashCodeRDD.reduceByKeyAndWindow(new Function2<Long, Long, Long>() {
-			
-			@Override
-			public Long call(Long arg0, Long arg1) throws Exception {
-				// TODO Auto-generated method stub
-				return (arg0 | arg1);
-			}
-		},new Duration(10000)); /**Every 10 seconds **/
-		
-		JavaPairDStream<Long,Long> resultRDD = reduceHashCode.mapToPair(new PairFunction<Tuple2<Long,Long>, Long, Long>() {
+		JavaPairDStream<Long, Long> reduceHashCode = hashCodeRDD
+				.reduceByKeyAndWindow(new Function2<Long, Long, Long>() {
 
-			@Override
-			public Tuple2<Long, Long> call(Tuple2<Long, Long> arg0) throws Exception {
-
-				Long oredHashCode = arg0._2();
-				String finalBinary = Long.toBinaryString(oredHashCode);
-				
-				Long result = 0L;
-				int j = 0;
-				for(int i=0;i<finalBinary.length();i++) {
-					
-					double numUsers  =  0;
-					if(finalBinary.charAt(i)=='1') {
-						numUsers = Math.pow(2, i)/PHI;
-						result = result + (long)numUsers;
+					@Override
+					public Long call(Long arg0, Long arg1) throws Exception {
+						return Math.max(arg0, arg1);
 					}
-				}
-				return new Tuple2<Long, Long>(1L, result);
-			}
-		});
-		
+				}, new Duration(60000), new Duration(60000));/** Every 60 seconds **/
+
+		JavaPairDStream<Long, Long> resultRDD = reduceHashCode
+				.mapToPair(new PairFunction<Tuple2<Long, Long>, Long, Long>() {
+
+					@Override
+					public Tuple2<Long, Long> call(Tuple2<Long, Long> arg0) throws Exception {
+
+						Long oredHashCode = arg0._2();
+//				String finalBinary = Long.toBinaryString(oredHashCode);
+
+						int pos = oredHashCode.intValue();
+
+//				for(int i=0;i<32;i++) {
+//					if((oredHashCode % 2)==0) {							
+//						pos++;
+//					}
+//					else {
+//						break;
+//					}
+//				}
+
+						Long result = 0L;
+						result = (long) (Math.pow(2, pos) / PHI);
+
+						System.out.println("The result is " + result);
+
+						return new Tuple2<Long, Long>(1L, result);
+					}
+				});
+
 		/** This is needed for check-pointing page 186 spark programming **/
-		jssc.checkpoint("/user/sheshadrik/checkpoint");
-		
+//		jssc.checkpoint("/user/sheshadrik/checkpoint");
+
 		resultRDD = resultRDD.updateStateByKey(new Function2<List<Long>, Optional<Long>, Optional<Long>>() {
 
 			@Override
 			public Optional<Long> call(List<Long> values, Optional<Long> state) throws Exception {
 
-				Long totalSum= state.or(0L);
-				
-				for(Long val : values) {
+				Long totalSum = state.or(0L);
+
+				for (Long val : values) {
 					totalSum = totalSum + val;
 				}
-				
+
 				return Optional.of(totalSum);
 			}
 		});
-		
+		jssc.checkpoint("file:///home/sheshadrik/q2aCheckpoint");
+
 		resultRDD.print();
-		resultRDD.dstream().saveAsTextFiles(output, ""); 
+		resultRDD.dstream().saveAsTextFiles(output + "q2b", "");
 
 		// Start the computation
 		jssc.start();
