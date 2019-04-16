@@ -1,0 +1,4 @@
+1. http://snap.stanford.edu/class/cs246-2012/slides/16-streams.pdf
+2. Distinct Approximate Counts : Flajolet-Martin algorithm (Sec 4.4.2 of the Mining of Massive Datasets)
+3. Sentiment Analysis : PANAS-t: A Psychometric Scale for Measuring Sentiments on Twitter, Pollyanna Goncalves, Fabricio Benevenuto, Meeyoung Cha, SYSTEMS, MAN, AND CYBERNETICS, PART C: APPLICATIONS AND REVIEWS,
+
