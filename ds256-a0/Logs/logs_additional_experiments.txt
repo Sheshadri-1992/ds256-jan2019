@@ -1,0 +1,62 @@
+Extra experiments that were ran
+
+1% which is 10GB data
+
+-------------------------------------------------------------------------------------------------
+Running with different number of executors
+
+application_1547011148574_0396
+4 executors 8GB RAM 4 executor cores (18:25:07 to 18:28:12 ) => 3:05 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_4_executor_try2
+
+application_1547011148574_0397
+3 executors 8GB RAM 4 executor cores ( 18:33:58 to 18:37:11 ) => 3:13 mins *
+output dir => /user/sheshadrik/assignment0_q4_1_percent_3_executor_try2
+
+application_1547011148574_0398
+2 executors 8GB RAM 4 executor cores(18:40:35 to 18:45:52 ) => 5:17 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_2_executor_try2
+
+-------------------------------------------------------------------------------------------------
+Running with different amount of executor memory
+
+application_1547011148574_0400
+5 executors 6GB RAM 4 executor cores (18:59:05 to 19:03:10) => 4:05 mins *
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_6G
+
+application_1547011148574_0401
+5 executors 4GB RAM 4 executor cores (19:07:23 to 19:10:57 ) => 3:34 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_4G
+
+application_1547011148574_0402
+5 executors 2GB RAM 4 executor cores (19:16:50 to  19:19:51) => 3:01 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_2G
+
+-------------------------------------------------------------------------------------------------
+Running with different number of executor cores
+
+application_1547011148574_0408
+5 executors 8GB RAM 3 executor cores  (19:42:23 to 19:49:26) => 7:03 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_3_cores
+
+application_1547011148574_0409
+5 executors 8GB RAM 2 executor cores  (19:53:02 to 19:57:16) => 4:14 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_2_cores
+
+application_1547011148574_0411
+5 executors 8GB RAM 1 executor cores  (20:05:38 to 20:09:33) => 3:55 mins *
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_1_cores
+
+-------------------------------------------------------------------------------------------------
+
+5% which is 50GB data
+
+application_1547011148574_0419
+5 executor 8GB RAM 2 executor cores (20:17:20 to 21:44:48)  => 27:28 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_2_cores_50GB_data (the naming convention is wrong but the file is the correct one)
+
+application_1547011148574_0420
+5 executor 8GB RAM 4 executor cores 4GB (21:22:53 to 21:43:41)  => 20:48 mins
+output dir => /user/sheshadrik/assignment0_q4_1_percent_5_executor_2_cores_50GB_data_4GB_RAM (the naming convention is wrong but the file is the correct one)
+
+-------------------------------------------------------------------------------------------------

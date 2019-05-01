@@ -1,0 +1,8 @@
+Q1 : application_1547011148574_0323
+Q2 : application_1547011148574_0236
+Q3 : application_1547011148574_0329
+Q4 : 
+	a) application_1547011148574_0340 (for ~10GB => 1%)
+	b) application_1547011148574_0345 (for ~53GB => 5%)
+	c) application_1547011148574_0349 (for ~106GB => 10%)
+	d) application_1547011148574_0353 (for ~266GB => 25%)

@@ -17,3 +17,6 @@ This is the public git repository for Assignment 0 of DS256 - Scalable Systems f
 ### Contents of logs.txt file ###
 The logs.txt should contain the application ID of the jobs run for each question. The current file is an example that should be modified by the students to contain the appropriate application IDs.
 Students are also expected to maintain the output of the command `yarn logs -applicationId <application ID>` for each of the application IDs in the logs.txt file in /home/<-username->/ds256/logs/Assignment0 (this directory is on the linux filesystem and not in hdfs) as a backup in case of any failures.
+
+THE ORIGINAL SUBMISSION SOURCE
+https://github.com/Sheshadri-1992/Assignment0/tree/master/ds256-a0
